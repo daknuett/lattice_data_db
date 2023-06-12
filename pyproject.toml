@@ -1,0 +1,19 @@
+[project]
+name="lattice_data_db"
+authors = [
+    {name="Daniel Knüttel", email="daniel.knuettel@physik.uni-regensburg.de"}
+]
+description = "Database for Lattice Observables"
+requires-python=">=3.4"
+readme="README.rst"
+dependencies=['numpy']
+
+version="0.0.1"
+
+[project.urls]
+repository="https://github.com/daknuett/lattice_data_db"
+homepage="https://github.com/daknuett/lattice_data_db"
+
+[build-system]
+requires = ["meson", "toml", "numpy", "ninja", "meson-python"]
+build-backend = 'mesonpy'
