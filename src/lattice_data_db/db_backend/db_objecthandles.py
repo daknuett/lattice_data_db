@@ -28,7 +28,11 @@ class DBValue:
         # Get the rowid the value will have:
         cursor = connection.cursor()
         c = cursor.execute("SELECT MAX(rowid) FROM data_values")
-        rowid = c.fetchone()[0] + 1
+        rowid = c.fetchone()[0]
+        if(rowid is None):
+            rowid = 0
+        rowid += 1
+
 
         my_uuid = uuid.uuid1()
 
