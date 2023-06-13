@@ -9,3 +9,9 @@ python.install_sources(
   pure: true,
   subdir: 'lattice_data_db/db_backend'
 )
+
+python.install_sources(
+  'aly_db/__init__.py', 'aly_db/export.py'
+  pure: true,
+  subdir: 'lattice_data_db/aly_db'
+)
