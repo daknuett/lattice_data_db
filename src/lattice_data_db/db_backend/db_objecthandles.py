@@ -73,9 +73,12 @@ class DBValue:
         return rid
 
     @classmethod 
-    def load(cls, connection: sqlite3.Connection, rid: int, store_file=None):
+    def load(cls, connection: sqlite3.Connection, rid: int, store_file=None, locals=None):
         """
         Load a value from the database using the given value id ``rid``.
+
+        The keyword argument ``locals`` is either None or a dict supplying some locals for the load_promise 
+        that is used to load data from file.
         """
         cursor = connection.cursor()
         c = cursor.execute("SELECT is_inline, av, load_promise, relapath FROM data_values where rowid=?", (rid,))
@@ -94,7 +97,12 @@ class DBValue:
 
         basepath = pathlib.Path(cls.get_basepth(connection))
 
-        value = eval(load_promise)(str(basepath / relapath))
+        if(locals is not None):
+            ctx = globals()
+            ctx.update(locals)
+            value = eval(load_promise, ctx)(str(basepath / relapath))
+        else:
+            value = eval(load_promise)(str(basepath / relapath))
 
         return cls(value, promise_loadfile=load_promise, loading_from_db=True, store_file=store_file, id=rid)
 
@@ -270,7 +278,10 @@ class Measurement:
         return rid
 
     @classmethod
-    def load(cls, connection: sqlite3.Connection, rid: int):
+    def load(cls, connection: sqlite3.Connection, rid: int, locals=None):
+        """
+        ``locals`` are passed to ``DBValue``.
+        """
         cursor = connection.cursor()
         c = cursor.execute("SELECT configuration, value, name FROM measurements where rowid=?", (rid,))
         result = c.fetchone()
@@ -280,7 +291,7 @@ class Measurement:
 
         
         configuration, value, name = result
-        value = DBValue.load(connection, value)
+        value = DBValue.load(connection, value, locals=locals)
 
 
         return cls(configuration, value, name, id=rid)
