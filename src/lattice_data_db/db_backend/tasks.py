@@ -21,6 +21,7 @@ def find_configurations_for_collection(connection: sqlite3.Connection, collectio
 def find_missing_configurations_for_collection(connection: sqlite3.Connection, collection: str, measurement_name: str):
     """
     Finds all the configurations on which ``measurement_name`` has not been measured.
+    
     """
     coll = Collection.findby_name(connection, collection)
     if(isinstance(coll, list)):
@@ -30,8 +31,8 @@ def find_missing_configurations_for_collection(connection: sqlite3.Connection, c
     all_configurations =  coll._configurations
 
     cursor = connection.cursor()
-    c = cursor.execute("SELECT configuration FROM measurements INNER JOIN collections_contains ON measurements.configuration = collections_contains.configuration WHERE collections_contains.collection = ?", (coll._id,))
+    c = cursor.execute("SELECT measurements.configuration FROM measurements INNER JOIN collections_contains ON measurements.configuration = collections_contains.configuration WHERE collections_contains.collection = ? AND measurements.name=?", (coll._id, measurement_name))
     already_measured = {f[0] for f in c}
 
-    missing_configurations = [c for c in all_configurations if c not in already_measured]
+    missing_configurations = [Configuration.load(connection, c) for c in all_configurations if c not in already_measured]
     return missing_configurations

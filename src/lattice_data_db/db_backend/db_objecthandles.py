@@ -172,7 +172,7 @@ class Configuration:
 
     def store(self, connection: sqlite3.Connection):
         cursor = connection.cursor()
-        cursor.execute("INSERT INTO connections VALUES(?, ?, ?)", (self._ensemble, self._relapath, self._load_promise))
+        cursor.execute("INSERT INTO configurations VALUES(?, ?, ?)", (self._ensemble, self._relapath, self._load_promise))
         rid = cursor.execute("SELECT LAST_INSERT_ROWID()").fetchone()[0]
         connection.commit()
 
@@ -259,10 +259,11 @@ class Measurement:
     ``._configuration`` is always configuration id.
     ``._value`` is always DBValue.
     """
-    def __init__(self, configuration, value: DBValue, name: str):
+    def __init__(self, configuration, value: DBValue, name: str, id=None):
         self._configuration = configuration2id(configuration)
         self._value = value 
         self._name = name
+        self._id = id
 
     def store(self, connection: sqlite3.Connection):
         cursor = connection.cursor()
