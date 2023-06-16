@@ -34,3 +34,17 @@ def export_measurement_collection(connection: sqlite3.Connection, measurement_na
     if(measurements[0]._value._is_external):
         return configurations, values
     return configurations, numpy.array(values)
+
+def list_measurements(connection: sqlite3.Connection):
+    """
+    list all available measurements by name
+    """
+    cursor = connection.cursor()
+    c = cursor.execute("SELECT DISTINCT(name) FROM measurements")
+    return [v[0] for v in c]
+
+def list_collections(connection: sqlite3.Connection):
+    cursor = connection.cursor()
+    c = cursor.execute("SELECT DISTINCT(name) FROM collections")
+    return [v[0] for v in c]
+
