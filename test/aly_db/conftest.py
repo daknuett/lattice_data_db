@@ -14,11 +14,13 @@ def populated_db(tmp_path):
     ensemble = Ensemble("ens001", "/data/ensembles/ens001", '''{ "lattice_size": [ 8, 8, 8, 16 ], "Nd": 4, "beta": 6.0, "action_name": "g.qcd.gauge.action.wilson(beta)", "rng_algo": "vectorized_ranlux24_24_64", "rng_seed": "0xdeadbeef", "startconfig": "g.qcd.gauge.unit(grid)", "grid_gn": "g.grid(lattice_size, g.double)", "ensname": "ens_001", "markov_gn": "g.algorithms.markov.su2_heat_bath(rng)", "n_want": 5000 } ''')
     erid = ensemble.store(conn)
 
-    for i in range(1200, 1300, 10):
-        configuration = Configuration(ensemble, f"{i}.config", "np.load") 
+    configurations = [ Configuration(ensemble, f"{i}.config", "np.load")  for i in range(1200, 1300, 10)]
+    for configuration in configurations:
         configuration.store(conn)
 
-    collection = Collection("test_collection", list(range(1200, 1250, 10)))
+    coll_confs = configurations[:6]
+
+    collection = Collection("test_collection", coll_confs)
     collection.store(conn)
 
     measurement_name1 = "test_measurement_1"

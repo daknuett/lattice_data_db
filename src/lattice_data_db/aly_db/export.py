@@ -27,7 +27,7 @@ def export_measurement_collection(connection: sqlite3.Connection, measurement_na
 
     measurements = [Measurement.load(connection, v[0], locals=locals) for v in c]
 
-    configurations = [m._configuration for m in measurements]
+    configurations = [Configuration.load(connection, m._configuration) for m in measurements]
     values = [m._value._value for m in measurements]
 
     # see if the values are numpy arrays:
