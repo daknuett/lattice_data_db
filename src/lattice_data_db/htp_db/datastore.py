@@ -42,13 +42,13 @@ class HTPStore:
         if(not os.path.exists(self._full_path)):
             raise ValueError("database does not exist. use HTPStore.new() to create it.")
 
-        self._dbinfo_name = dbinfo_name
+        self._dbinfo_name = info["info"]["dbinfoname"]
         self._info = info 
         self._readonly = readonly
 
 
     @classmethod 
-    def new(cls, name, abspath=None, loadpromise="numpy.load", store=numpy.save):
+    def new(cls, name, abspath=None, loadpromise="lambda s: numpy.load(s + '.npy')", store=numpy.save):
         """
         Creates a new HTPStore and returns a new HTPStore object associated with it.
         """
@@ -62,9 +62,9 @@ class HTPStore:
         info = {
                 "info": {"type": "database"
                              , "class": cls.__name__
-                             , "created": self.get_now()
+                             , "created": datetime.datetime.now().strftime(datetime_format)
                              , "datetime.format": datetime_format
-                             , "lastjrnlsync": self.get_now()
+                             , "lastjrnlsync": datetime.datetime.now().strftime(datetime_format)
                              , "jrnlprefix": cls.jrnl_prefix
                              , "dbinfoname": cls.dbinfo_name
                              , "glossary": "https://github.com/daknuett/lattice_data_db"
@@ -75,7 +75,7 @@ class HTPStore:
                 , "data_groups": {}
                }
         with open(os.path.join(full_path, cls.dbinfo_name), "w") as dbinfo_file:
-            json.dump(info, dbinfo_name)
+            json.dump(info, dbinfo_file)
 
         return cls.open(name, syncjournal=False, store=store, abspath=abspath)
 
@@ -88,11 +88,11 @@ class HTPStore:
             abspath = os.getcwd()
 
         full_path = os.path.join(abspath, name)
-        if(not os.path.exists(self._full_path)):
+        if(not os.path.exists(full_path)):
             raise ValueError("database does not exist. use HTPStore.new() to create it.")
 
         with open(os.path.join(full_path, cls.dbinfo_name), "r") as dbinfo_file:
-            info = json.load(dbinfo_name)
+            info = json.load(dbinfo_file)
 
         db = cls(name, abspath, info["info"]["loadpromise"], store, info, readonly)
 
@@ -160,6 +160,11 @@ class HTPStore:
                 jrnl_entry = json.load(jrnl)
 
             name = jrnl_entry["name"]
+
+            # Check in the dicts due to better performance.
+            if(name in new_infos):
+                raise Exception(f"journal entry doubler: {name} found but already in transaction (offending journal entry: {jrnl_entry['file']})")
+
             if(name in self._info["data_info"]):
                 # resolve name collision
                 if(self._info["data_info"][name]["jrnl_entry_create"] == jrnl_entry["jrnl_entry_create"]):
@@ -177,7 +182,7 @@ class HTPStore:
             files_to_delete.append(jrnl_f)
 
 
-        self._info["data_tags"].append(new_tags)
+        self._info["data_tags"].extend(new_tags)
         self._info["data_info"].update(new_infos)
         self._info["info"]["lastjrnlsync"] = self.get_now()
 
@@ -192,6 +197,8 @@ class HTPStore:
 
         for f in files_to_delete:
             os.remove(f)
+
+        return len(files_to_delete)
 
     @property
     def tags(self):
@@ -217,9 +224,9 @@ class HTPStore:
         if(locals is not None):
             ctx = globals()
             ctx.update(locals)
-            return eval(load_promise, ctx)(os.path.join(self._full_path, file_name))
+            return eval(self._loadpromise, ctx)(os.path.join(self._full_path, file_name))
         else:
-            return eval(load_promise)(os.path.join(self._full_path, file_name))
+            return eval(self._loadpromise)(os.path.join(self._full_path, file_name))
 
     @property 
     def all_data(self):

@@ -11,7 +11,13 @@ python.install_sources(
 )
 
 python.install_sources(
-  'aly_db/__init__.py', 'aly_db/export.py',
+  'aly_db/__init__.py', 'aly_db/export.py', 'aly_db/export_htp.py'
   pure: true,
   subdir: 'lattice_data_db/aly_db'
+)
+
+python.install_sources(
+  'htp_db/__init__.py', 'htp_db/datastore.py',
+  pure: true,
+  subdir: 'lattice_data_db/htp_db'
 )
